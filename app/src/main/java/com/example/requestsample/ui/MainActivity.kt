@@ -24,36 +24,24 @@ class MainActivity : AppCompatActivity() {
         setupObservers()
     }
 
-    /** you can Generalize in BaseClass */
-    private fun withVB(block: ActivityMainBinding.() -> Unit) = block.invoke(binding)
-    private fun withVM(block: MainVM.() -> Unit) = block.invoke(viewModel)
-    private fun collectWithVB(block: ActivityMainBinding.(MainVM.LyricsState) -> Unit) {
+    private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.state.collect {
-                block(binding, it)
-            }
-        }
-    }
-
-    private fun sendEvent(event: MainVM.Event) = withVM { onEvent(event) }
-    private fun setListeners(block: ActivityMainBinding.() -> Unit) = block(binding)
-
-    private fun setupObservers() {
-        collectWithVB {
-            lyrics.text = it.lyrics?.lyrics
-            loading(it.loading)
-            it.error?.let { throwable ->
-                Toast.makeText(
-                    this@MainActivity, throwable.message ?: "", Toast.LENGTH_SHORT
-                ).show()
+                binding.lyrics.text = it.lyrics?.lyrics
+                loading(it.loading)
+                it.error?.let { throwable ->
+                    Toast.makeText(
+                        this@MainActivity, throwable.message ?: "", Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
 
     private fun setupListeners() {
-        setListeners {
+        with(binding) {
             btnGetLyrics.setOnClickListener {
-                sendEvent(
+                viewModel.onEvent(
                     MainVM.Event.GetLyricsEvent(
                         etArtist.text.toString(), etTitle.text.toString()
                     )
